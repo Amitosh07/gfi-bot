@@ -38,6 +38,35 @@ jobs:
           print(f"Webhook SHA256: {hashlib.sha256(webhook.encode()).hexdigest()}")
           PY
 
+      - name: Test Discord webhook connectivity
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          status="$(curl -sS -o /tmp/discord-response.txt -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            --data '{"content":"GFI Bot GitHub Actions connectivity test"}' \
+            "$DISCORD_WEBHOOK_URL" 2>/dev/null || true)"
+          DISCORD_HTTP_STATUS="$status" python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          webhook = os.environ.get("DISCORD_WEBHOOK_URL", "")
+          response_file = Path("/tmp/discord-response.txt")
+          body = response_file.read_text(errors="replace") if response_file.exists() else ""
+          if webhook:
+              body = body.replace(webhook, "[REDACTED]")
+          body = re.sub(
+              r"https?://(?:canary\\.|ptb\\.)?discord(?:app)?\\.com/api/webhooks/[^\\s]+",
+              "[REDACTED_DISCORD_WEBHOOK_URL]",
+              body,
+          )
+          print(f"Discord HTTP status: {os.environ['DISCORD_HTTP_STATUS']}")
+          print("Discord response body:")
+          print(body or "<empty>")
+          PY
+
       - name: Run GFI bot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
