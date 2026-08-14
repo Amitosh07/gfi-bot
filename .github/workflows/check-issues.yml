@@ -25,6 +25,19 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Diagnose Discord webhook secret
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import os
+
+          webhook = os.environ["DISCORD_WEBHOOK_URL"]
+          print(f"Webhook length: {len(webhook)}")
+          print(f"Webhook SHA256: {hashlib.sha256(webhook.encode()).hexdigest()}")
+          PY
+
       - name: Run GFI bot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
