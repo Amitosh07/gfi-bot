@@ -58,3 +58,8 @@ commit `state.json` back.
   (`*/30 * * * *` = every 30 min; GitHub's scheduler can drift a few minutes
   under load — normal).
 - The script retries once with backoff on GitHub rate-limit errors (403/429).
+- `state.json` records only issues that were already seen or whose Discord
+  notification was accepted. A failed Discord delivery is not recorded, so it
+  is retried on the next run.
+- The workflow uses GitHub Actions concurrency (`gfi-bot`) to ensure that only
+  one run updates and commits `state.json` at a time.

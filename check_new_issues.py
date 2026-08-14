@@ -89,8 +89,12 @@ def fetch_open_issues(repo, retries=2):
 
 def post_to_discord(repo, issue):
     if not DISCORD_WEBHOOK_URL:
-        print(f"[dry-run] Would post: {repo}#{issue['number']} {issue['title']}")
-        return
+        print(
+            f"Discord webhook is not configured; not marking "
+            f"{repo}#{issue['number']} as seen.",
+            file=sys.stderr,
+        )
+        return False
 
     mention = f"<@{DISCORD_USER_ID}> " if DISCORD_USER_ID else ""
     matched_labels = ", ".join(
@@ -110,11 +114,47 @@ def post_to_discord(repo, issue):
         method="POST",
     )
     try:
-        urllib.request.urlopen(req)
+        with urllib.request.urlopen(req) as response:
+            status = response.getcode()
+        if not 200 <= status < 300:
+            print(
+                f"Discord rejected {repo}#{issue['number']} (HTTP {status}); "
+                "not marking it as seen.",
+                file=sys.stderr,
+            )
+            return False
         print(f"Posted: {repo}#{issue['number']}")
-    except Exception as e:
-        print(f"ERROR posting {repo}#{issue['number']}: {e}", file=sys.stderr)
-    time.sleep(1)  # be gentle with Discord's rate limit
+        return True
+    except urllib.error.HTTPError as e:
+        if e.code == 403:
+            print(
+                f"Discord rejected the webhook for {repo}#{issue['number']} "
+                "(HTTP 403); not marking it as seen.",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"Discord post failed for {repo}#{issue['number']} "
+                f"(HTTP {e.code}); not marking it as seen.",
+                file=sys.stderr,
+            )
+        return False
+    except urllib.error.URLError:
+        print(
+            f"Discord post failed for {repo}#{issue['number']} due to a network error; "
+            "not marking it as seen.",
+            file=sys.stderr,
+        )
+        return False
+    except Exception:
+        print(
+            f"Discord post failed unexpectedly for {repo}#{issue['number']}; "
+            "not marking it as seen.",
+            file=sys.stderr,
+        )
+        return False
+    finally:
+        time.sleep(1)  # be gentle with Discord's rate limit
 
 
 # ---- State --------------------------------------------------------------
@@ -147,14 +187,20 @@ def main():
             continue
 
         new_issues = [it for it in issues if it["number"] not in seen]
-        # Post oldest-first so Discord message order reads naturally
-        for issue in reversed(new_issues):
-            post_to_discord(repo, issue)
+        if new_issues:
             any_new = True
 
-        # Update seen set with everything currently open (bounded growth:
-        # closed/relabeled issues naturally drop out over time)
-        state[repo] = [it["number"] for it in issues]
+        successfully_seen = [
+            issue["number"] for issue in issues if issue["number"] in seen
+        ]
+        # Post oldest-first so Discord message order reads naturally
+        for issue in reversed(new_issues):
+            if post_to_discord(repo, issue):
+                successfully_seen.append(issue["number"])
+
+        # Keep only matching issues that were already seen or whose Discord
+        # notification succeeded. Closed/relabeled issues drop out over time.
+        state[repo] = successfully_seen
         time.sleep(3)  # stay under GitHub's search rate limit
 
     save_state(state)
