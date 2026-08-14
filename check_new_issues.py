@@ -9,6 +9,7 @@ after every run, so the bot never re-announces the same issue twice.
 """
 
 import json
+import http.client
 import os
 import sys
 import time
@@ -107,15 +108,31 @@ def post_to_discord(repo, issue):
         + f"\n**{issue['title']}**\n{issue['html_url']}"
     )
     payload = json.dumps({"content": content}).encode("utf-8")
-    req = urllib.request.Request(
-        DISCORD_WEBHOOK_URL,
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
+    webhook = urllib.parse.urlsplit(DISCORD_WEBHOOK_URL)
+    if webhook.scheme != "https" or not webhook.netloc:
+        print(
+            f"Discord webhook configuration is invalid; not marking "
+            f"{repo}#{issue['number']} as seen.",
+            file=sys.stderr,
+        )
+        return False
+
+    request_path = webhook.path or "/"
+    if webhook.query:
+        request_path += f"?{webhook.query}"
+
+    connection = None
     try:
-        with urllib.request.urlopen(req) as response:
-            status = response.getcode()
+        connection = http.client.HTTPSConnection(webhook.netloc, timeout=15)
+        connection.request(
+            "POST",
+            request_path,
+            body=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        response = connection.getresponse()
+        status = response.status
+        response.read()
         if not 200 <= status < 300:
             print(
                 f"Discord rejected {repo}#{issue['number']} (HTTP {status}); "
@@ -125,21 +142,14 @@ def post_to_discord(repo, issue):
             return False
         print(f"Posted: {repo}#{issue['number']}")
         return True
-    except urllib.error.HTTPError as e:
-        if e.code == 403:
-            print(
-                f"Discord rejected the webhook for {repo}#{issue['number']} "
-                "(HTTP 403); not marking it as seen.",
-                file=sys.stderr,
-            )
-        else:
-            print(
-                f"Discord post failed for {repo}#{issue['number']} "
-                f"(HTTP {e.code}); not marking it as seen.",
-                file=sys.stderr,
-            )
+    except http.client.HTTPException:
+        print(
+            f"Discord post failed for {repo}#{issue['number']}; "
+            "not marking it as seen.",
+            file=sys.stderr,
+        )
         return False
-    except urllib.error.URLError:
+    except OSError:
         print(
             f"Discord post failed for {repo}#{issue['number']} due to a network error; "
             "not marking it as seen.",
@@ -154,6 +164,8 @@ def post_to_discord(repo, issue):
         )
         return False
     finally:
+        if connection is not None:
+            connection.close()
         time.sleep(1)  # be gentle with Discord's rate limit
 
 
