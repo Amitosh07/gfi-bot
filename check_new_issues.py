@@ -30,7 +30,7 @@ REPOS = [
 ]
 
 # Default label to watch for. Some repos don't use "good first issue"
-# exactly, or currently have zero open ones under it — add fallback labels
+# exactly, or currently have zero open ones under it â€” add fallback labels
 # per repo here so the bot still catches their beginner-tagged issues.
 DEFAULT_LABELS = ["good first issue"]
 REPO_LABELS = {
@@ -98,7 +98,7 @@ def post_to_discord(repo, issue):
         if l["name"].lower() in {x.lower() for x in REPO_LABELS.get(repo, DEFAULT_LABELS)}
     )
     content = (
-        f"{mention}🆕 **New beginner-friendly issue** in `{repo}`"
+        f"{mention}ðŸ†• **New beginner-friendly issue** in `{repo}`"
         + (f" [{matched_labels}]" if matched_labels else "")
         + f"\n**{issue['title']}**\n{issue['html_url']}"
     )

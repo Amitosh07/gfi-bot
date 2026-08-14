@@ -1,0 +1,27 @@
+# Local environment and secret material
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+
+# Python caches and virtual environments
+**pycache**/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Local tooling and operating-system files
+.pytest_cache/
+.mypy_cache/
+.coverage
+.DS_Store
+Thumbs.db
+*.local

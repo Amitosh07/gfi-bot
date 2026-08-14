@@ -58,4 +58,3 @@ commit `state.json` back.
   (`*/30 * * * *` = every 30 min; GitHub's scheduler can drift a few minutes
   under load — normal).
 - The script retries once with backoff on GitHub rate-limit errors (403/429).
-

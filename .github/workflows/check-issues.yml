@@ -1,19 +1,19 @@
-name: Check for new good-first-issues
+name: GFI Bot
 
 on:
   schedule:
-    # Runs every 30 minutes. Edit the cron expression to change frequency.
     - cron: "*/30 * * * *"
-  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab
+  workflow_dispatch:
 
 permissions:
-  contents: write   # needed so the workflow can commit state.json back
+  contents: write
 
 jobs:
-  check:
+  check-issues:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -21,17 +21,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run issue checker
+      - name: Run GFI bot
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python check_new_issues.py
 
-      - name: Commit updated state
+      - name: Save updated state
         run: |
-          git config user.name "gfi-bot"
-          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add state.json
-          git diff --quiet --cached || git commit -m "Update seen-issues state"
+          git diff --cached --quiet || git commit -m "Update issue tracking state"
           git push
