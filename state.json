@@ -1,1 +1,10 @@
-{}
+{
+  "huggingface/transformers": [],
+  "keras-team/keras": [],
+  "ollama/ollama": [],
+  "opencv/opencv": [],
+  "pytorch/pytorch": [],
+  "scikit-learn/scikit-learn": [],
+  "vllm-project/vllm": [],
+  "zulip/zulip": []
+}
