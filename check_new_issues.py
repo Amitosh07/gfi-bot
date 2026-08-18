@@ -8,36 +8,72 @@ same folder. The GitHub Actions workflow commits that file back to the repo
 after every run, so the bot never re-announces the same issue twice.
 """
 
-import json
 import http.client
+import json
 import os
 import sys
 import time
-import urllib.request
 import urllib.error
 import urllib.parse
+import urllib.request
 
 # ---- Configuration ---------------------------------------------------
 
 REPOS = [
-    "zulip/zulip",
+    # --- LLM & AI Frameworks ---
+    "huggingface/transformers",
+    "huggingface/datasets",
+    "vllm-project/vllm",
+    "ollama/ollama",
+    "langchain-ai/langchain",
+    "run-llama/llama_index",
+    "BerriAI/litellm",
+    "embedchain/embedchain",
+    "tensorchord/pgvecto.rs",
+
+    # --- Core ML / Data Science / Vision ---
+    "scikit-learn/scikit-learn",
     "pytorch/pytorch",
     "keras-team/keras",
-    "ollama/ollama",
-    "vllm-project/vllm",
-    "huggingface/transformers",
-    "scikit-learn/scikit-learn",
+    "google/jax",
     "opencv/opencv",
+    "pandas-dev/pandas",
+    "geopandas/geopandas",
+    "cvat-ai/cvat",
+
+    # --- Web, APIs & Microservices ---
+    "fastapi/fastapi",
+    "tiangolo/sqlmodel",
+    "tiangolo/full-stack-fastapi-template",
+    "encode/starlette",
+    "encode/httpx",
+    "pydantic/pydantic",
+    "zulip/zulip",
+
+    # --- Developer Tooling & CLI ---
+    "astral-sh/uv",
+    "astral-sh/ruff",
+    "psf/black",
+    "Textualize/rich",
+    "Textualize/textual",
 ]
 
 # Default label to watch for. Some repos don't use "good first issue"
-# exactly, or currently have zero open ones under it â€” add fallback labels
-# per repo here so the bot still catches their beginner-tagged issues.
+# exactly, or currently have zero open ones under it — fallback labels
+# are mapped per repo here.
 DEFAULT_LABELS = ["good first issue"]
+
 REPO_LABELS = {
     "huggingface/transformers": ["good first issue", "Good Difficulty Issue", "help wanted"],
-    "scikit-learn/scikit-learn": ["good first issue", "help wanted", "Moderate"],
+    "scikit-learn/scikit-learn": ["good first issue", "help wanted", "Moderate", "Easy"],
     "opencv/opencv": ["good first issue", "help wanted"],
+    "langchain-ai/langchain": ["good first issue", "help wanted", "documentation"],
+    "run-llama/llama_index": ["good first issue", "help wanted", "beginner"],
+    "pandas-dev/pandas": ["good first issue", "Needs triage", "Docs"],
+    "pydantic/pydantic": ["good first issue", "help wanted"],
+    "Textualize/rich": ["good first issue", "help wanted"],
+    "Textualize/textual": ["good first issue", "help wanted"],
+    "zulip/zulip": ["good first issue", "help wanted", "area: documentation"],
 }
 
 STATE_FILE = os.path.join(os.path.dirname(__file__), "state.json")
@@ -48,6 +84,7 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 DISCORD_USER_ID = os.environ.get("DISCORD_USER_ID", "")  # optional, numeric
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")  # optional, raises rate limit
+
 
 # ---- GitHub -----------------------------------------------------------
 
@@ -64,7 +101,10 @@ def gh_headers():
 def fetch_open_issues(repo, retries=2):
     labels = REPO_LABELS.get(repo, DEFAULT_LABELS)
     label_clause = " OR ".join(f'label:"{l}"' for l in labels)
-    q = f'repo:{repo} state:open ({label_clause})'
+    
+    # is:issue prevents matching pull requests
+    q = f'repo:{repo} is:issue state:open ({label_clause})'
+    
     url = "https://api.github.com/search/issues?" + urllib.parse.urlencode({
         "q": q,
         "sort": "created",
@@ -103,7 +143,7 @@ def post_to_discord(repo, issue):
         if l["name"].lower() in {x.lower() for x in REPO_LABELS.get(repo, DEFAULT_LABELS)}
     )
     content = (
-        f"{mention}ðŸ†• **New beginner-friendly issue** in `{repo}`"
+        f"{mention}🆕 **New beginner-friendly issue** in `{repo}`"
         + (f" [{matched_labels}]" if matched_labels else "")
         + f"\n**{issue['title']}**\n{issue['html_url']}"
     )
