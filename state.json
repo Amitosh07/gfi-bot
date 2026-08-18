@@ -3,9 +3,9 @@
   "Textualize/rich": [],
   "Textualize/textual": [],
   "astral-sh/ruff": [
-    970,
+    27495,
     14985,
-    27495
+    970
   ],
   "astral-sh/uv": [
     18626
