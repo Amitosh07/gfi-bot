@@ -1,17 +1,35 @@
 {
+  "BerriAI/litellm": [],
+  "Textualize/rich": [],
+  "Textualize/textual": [],
+  "astral-sh/ruff": [
+    970,
+    14985,
+    27495
+  ],
+  "astral-sh/uv": [
+    18626
+  ],
+  "cvat-ai/cvat": [],
+  "encode/httpx": [],
+  "fastapi/fastapi": [],
+  "geopandas/geopandas": [
+    3785
+  ],
+  "huggingface/datasets": [],
   "huggingface/transformers": [],
   "keras-team/keras": [
     18442
   ],
+  "langchain-ai/langchain": [],
   "ollama/ollama": [
     3910
   ],
   "opencv/opencv": [],
+  "pandas-dev/pandas": [],
+  "psf/black": [],
+  "pydantic/pydantic": [],
   "pytorch/pytorch": [
-    190432,
-    187396,
-    184793,
-    157193,
     119856,
     115273,
     71392,
@@ -19,36 +37,11 @@
     26354,
     9886
   ],
+  "run-llama/llama_index": [],
   "scikit-learn/scikit-learn": [],
+  "tensorchord/pgvecto.rs": [],
   "vllm-project/vllm": [
-    46598,
     30075
   ],
-  "zulip/zulip": [
-    38197,
-    37183,
-    37004,
-    36877,
-    36715,
-    34985,
-    21045,
-    20912,
-    20748,
-    19687,
-    17716,
-    17474,
-    17419,
-    17181,
-    17008,
-    16928,
-    16718,
-    16426,
-    16174,
-    16147,
-    15973,
-    15634,
-    15552,
-    13746,
-    13657
-  ]
+  "zulip/zulip": []
 }
