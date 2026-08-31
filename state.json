@@ -13,7 +13,9 @@
   "cvat-ai/cvat": [],
   "encode/httpx": [],
   "fastapi/fastapi": [],
-  "geopandas/geopandas": [],
+  "geopandas/geopandas": [
+    3785
+  ],
   "huggingface/datasets": [],
   "huggingface/transformers": [],
   "keras-team/keras": [
