@@ -40,8 +40,6 @@
   "run-llama/llama_index": [],
   "scikit-learn/scikit-learn": [],
   "tensorchord/pgvecto.rs": [],
-  "vllm-project/vllm": [
-    30075
-  ],
+  "vllm-project/vllm": [],
   "zulip/zulip": []
 }
